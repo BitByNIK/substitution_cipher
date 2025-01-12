@@ -15,6 +15,9 @@ SR = {}
 CR = {}
 
 ignore_chars = {' ', ',', ';', '!', '.'}
+ciphertext_chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '@', '#', '$',
+                    'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', 'q', 'p', 'o', 'n']
+lowercase_alphabets = [chr(i) for i in range(ord('a'), ord('z') + 1)]
 
 
 def swap_mappings(d, pd):
@@ -64,11 +67,6 @@ def pd_preprocessing(ciphertext):
     CF = {letter: (count / total_ciphertext_letters)
           for letter, count in ciphertext_letter_count.items()}
 
-    dummy_index = 1
-    while len(CF) < 26:
-        CF[f"_dummy{dummy_index}"] = 0.0
-        dummy_index += 1
-
     sorted_SF = sorted(SF.keys(), key=lambda x: SF[x])
     sorted_CF = sorted(CF.keys(), key=lambda x: CF[x])
 
@@ -109,17 +107,9 @@ def get_decrypted_text(ciphertext, current_key):
 def substitution_decipher(ciphertext):
     frequency_analysis()
 
-    unique_cipher_chars = list(set(ciphertext.lower()) - ignore_chars)
-    lowercase_alphabets = [chr(i) for i in range(ord('a'), ord('z') + 1)]
-
-    dummy_index = 1
-    while len(unique_cipher_chars) < 26:
-        unique_cipher_chars.append(f"_dummy{dummy_index}")
-        dummy_index += 1
-
     random.shuffle(lowercase_alphabets)
     best_key = {key: value for key, value in zip(
-        unique_cipher_chars, lowercase_alphabets)}
+        ciphertext_chars, lowercase_alphabets)}
     best_key_fitness = getFitness(get_decrypted_text(ciphertext, best_key))
 
     pd_preprocessing(ciphertext.lower())
@@ -129,7 +119,7 @@ def substitution_decipher(ciphertext):
 
         random.shuffle(lowercase_alphabets)
         best_iteration_key = {key: value for key, value in zip(
-            unique_cipher_chars, lowercase_alphabets)}
+            ciphertext_chars, lowercase_alphabets)}
         best_iteration_key_fitness = getFitness(
             get_decrypted_text(ciphertext, best_iteration_key))
 
@@ -152,6 +142,8 @@ def substitution_decipher(ciphertext):
         if best_iteration_key_fitness > best_key_fitness:
             best_key, best_key_fitness = best_iteration_key, best_iteration_key_fitness
 
+    sorted_key = sorted(best_key.items(), key=lambda item: item[1])
+    print("".join(k for k, v in sorted_key))
     print(get_decrypted_text(ciphertext, best_key))
 
 
