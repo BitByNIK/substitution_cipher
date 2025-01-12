@@ -8,7 +8,6 @@ QF = {}
 SR = {}
 CR = {}
 
-ignore_chars = {' ', ',', ';', '!', '.'}
 ciphertext_chars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '@', '#', '$',
                     'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', 'q', 'p', 'o', 'n']
 lowercase_alphabets = [chr(i) for i in range(ord('a'), ord('z') + 1)]
@@ -36,7 +35,7 @@ def frequency_analysis():
         filtered_text = ''.join([char.lower()
                                  for char in text if 'a' <= char <= 'z'])
 
-        quadgrams = zip(*[filtered_text[i:] for i in range(4)])
+        quadgrams = [tuple(text[i:i+4]) for i in range(len(text) - 3)]
 
         letter_count = Counter(filtered_text)
         quadgram_count = Counter(quadgrams)
@@ -46,8 +45,8 @@ def frequency_analysis():
 
         SF = {letter: (count / total_letters) for letter,
               count in letter_count.items()}
-        QF = {quadgram: freq / total_quadgrams for quadgram,
-              freq in quadgram_count.items()}
+        QF = {quadgram: (count / total_quadgrams) for quadgram,
+              count in quadgram_count.items()}
 
 
 def pd_preprocessing(ciphertext):
@@ -56,8 +55,13 @@ def pd_preprocessing(ciphertext):
 
     text = ciphertext.lower()
     ciphertext_letter_count = Counter(
-        char for char in text if char not in ignore_chars)
+        char for char in text if char in ciphertext_chars)
     total_ciphertext_letters = sum(ciphertext_letter_count.values())
+
+    for char in ciphertext_chars:
+        if char not in ciphertext_letter_count:
+            ciphertext_letter_count[char] = 0
+
     CF = {letter: (count / total_ciphertext_letters)
           for letter, count in ciphertext_letter_count.items()}
 
@@ -82,12 +86,14 @@ def generate_probabilty_distribution(current_key):
 
 
 def getFitness(text):
-    quadgrams = zip(*[text[i:] for i in range(4)])
-    fitness = 0
+    quadgrams = [tuple(text[i:i+4]) for i in range(len(text) - 3)]
 
+    fitness = 0
     for quadgram in quadgrams:
         if quadgram in QF:
-            fitness += math.log10(QF[quadgram])
+            fitness += math.log(QF[quadgram])
+        else:
+            fitness += math.log(1e-10)
 
     return fitness
 
@@ -113,7 +119,7 @@ def substitution_decipher(ciphertext):
 
     best_key, best_key_fitness = get_key_and_fitness(ciphertext)
 
-    pd_preprocessing(ciphertext.lower())
+    pd_preprocessing(ciphertext)
 
     for _ in range(100):
         checks = 0
@@ -141,8 +147,8 @@ def substitution_decipher(ciphertext):
             best_key, best_key_fitness = best_iteration_key, best_iteration_key_fitness
 
     sorted_key = sorted(best_key.items(), key=lambda item: item[1])
-    print("Key: ", "".join(k for k, v in sorted_key))
-    print("Decrypted Text: ", get_decrypted_text(ciphertext, best_key))
+    print("Key:", "".join(k for k, v in sorted_key))
+    print("Decrypted Text:", get_decrypted_text(ciphertext, best_key))
 
 
 if __name__ == "__main__":
