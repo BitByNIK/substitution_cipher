@@ -14,16 +14,18 @@ lowercase_alphabets = [chr(i) for i in range(ord('a'), ord('z') + 1)]
 
 
 def swap_mappings(d, pd):
-    if len(d) < 2:
-        print("Dictionary must have at least two keys to swap.")
-        return d
+    n_d = d.copy()
 
     key1 = random.choices(list(pd.keys()), weights=pd.values())[0]
-    key2 = random.choice(list(d.keys()))
+    key2 = random.choice(list(pd.keys()))
+    while key2 == key1:
+        key2 = random.choice(list(pd.keys()))
 
-    d[key1], d[key2] = d[key2], d[key1]
+    temp = n_d[key1]
+    n_d[key1] = n_d[key2]
+    n_d[key2] = temp
 
-    return d
+    return n_d
 
 
 def frequency_analysis():
@@ -33,9 +35,10 @@ def frequency_analysis():
     with open("big.txt", "r", encoding="utf-8") as file:
         text = file.read()
         filtered_text = ''.join([char.lower()
-                                 for char in text if 'a' <= char <= 'z'])
+                                for char in text if char.isalpha()])
 
-        quadgrams = [tuple(text[i:i+4]) for i in range(len(text) - 3)]
+        quadgrams = [tuple(filtered_text[i:i+4])
+                     for i in range(len(filtered_text) - 3)]
 
         letter_count = Counter(filtered_text)
         quadgram_count = Counter(quadgrams)
@@ -72,7 +75,7 @@ def pd_preprocessing(ciphertext):
     CR = {letter: rank for rank, letter in enumerate(sorted_CF, start=1)}
 
 
-def generate_probabilty_distribution(current_key):
+def generate_probability_distribution(current_key):
     heuristic_values = {}
     for letter in CR:
         decrypted_letter = current_key[letter]
@@ -86,7 +89,9 @@ def generate_probabilty_distribution(current_key):
 
 
 def getFitness(text):
-    quadgrams = [tuple(text[i:i+4]) for i in range(len(text) - 3)]
+    filtered_text = ''.join([char.lower() for char in text if char.isalpha()])
+    quadgrams = [tuple(filtered_text[i:i+4])
+                 for i in range(len(filtered_text) - 3)]
 
     fitness = 0
     for quadgram in quadgrams:
@@ -127,19 +132,20 @@ def substitution_decipher(ciphertext):
         best_iteration_key, best_iteration_key_fitness = get_key_and_fitness(
             ciphertext)
 
-        pd = generate_probabilty_distribution(best_iteration_key)
+        pd = generate_probability_distribution(best_iteration_key)
 
         while True:
             new_key = swap_mappings(best_iteration_key, pd)
             new_key_fitness = getFitness(
                 get_decrypted_text(ciphertext, new_key))
 
+            checks = checks + 1
+
             if new_key_fitness > best_iteration_key_fitness:
-                best_iteration_key, best_iteration_key_fitness = new_key, new_key_fitness
-                pd = generate_probabilty_distribution(new_key)
+                best_iteration_key, best_iteration_key_fitness = new_key.copy(), new_key_fitness
+                pd = generate_probability_distribution(best_iteration_key)
                 checks = 0
 
-            checks = checks + 1
             if checks >= 600:
                 break
 
