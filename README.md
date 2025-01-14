@@ -22,7 +22,7 @@ A substitution cipher replaces each letter in plaintext with a specific characte
    - Formula used for fitness:
      $$\text{Fitness} = \sum_{\text{quadgram}} \log(\text{QF}[\text{quadgram}])$$
      - **QF** represents the frequency of quadgrams in standard English text.
-     - Taking the logarithm ensures that rare quadgrams reduce the score significantly while common ones increase it.
+     - Taking the logarithm ensures to avoid underflow because frequencies can be small.
 
 3. **Heuristic-Based Key Selection:**
 
