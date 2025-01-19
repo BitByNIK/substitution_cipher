@@ -152,9 +152,13 @@ def substitution_decipher(ciphertext):
         if best_iteration_key_fitness > best_key_fitness:
             best_key, best_key_fitness = best_iteration_key, best_iteration_key_fitness
 
+        print(f"\nIteration: {_ + 1}, Fitness: {best_key_fitness}")
+        print("Current Decrypted Text:",
+              get_decrypted_text(ciphertext, best_key), "\n")
+
     sorted_key = sorted(best_key.items(), key=lambda item: item[1])
-    print("Key:", "".join(k for k, v in sorted_key))
-    print("Decrypted Text:", get_decrypted_text(ciphertext, best_key))
+    print("Final Key:", "".join(k for k, v in sorted_key))
+    print("Final Decrypted Text:", get_decrypted_text(ciphertext, best_key))
 
 
 if __name__ == "__main__":
